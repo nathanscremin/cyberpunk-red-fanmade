@@ -1,0 +1,887 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cyberpunk RED – Character Sheet</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;600;700&display=swap');
+
+  :root {
+    --blood:    #7a1f1f;
+    --blood-dk: #4d0f0f;
+    --dark:     #111111;
+    --darker:   #0a0a0a;
+    --panel:    #1a1a1a;
+    --border:   #3a1010;
+    --text:     #e8e0d0;
+    --text-dim: #9a8a78;
+    --input-bg: rgba(255,255,255,0.04);
+    --input-focus: rgba(122,31,31,0.25);
+    --header-h: 28px;
+    --row-h:    22px;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #0d0d0d;
+    color: var(--text);
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 13px;
+    min-height: 100vh;
+  }
+
+  /* ── TOP BAR ── */
+  #topbar {
+    position: sticky; top: 0; z-index: 100;
+    background: var(--blood-dk);
+    border-bottom: 2px solid var(--blood);
+    display: flex; align-items: center; gap: 10px;
+    padding: 6px 16px;
+  }
+  #topbar .logo {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 18px; font-weight: 700;
+    color: var(--text); letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+  #topbar .logo span { color: var(--blood); }
+  #topbar .spacer { flex: 1; }
+  #topbar button {
+    background: var(--blood); color: var(--text);
+    border: 1px solid #a03030; border-radius: 2px;
+    padding: 4px 14px; font-family: 'Rajdhani', sans-serif;
+    font-size: 13px; font-weight: 700; cursor: pointer;
+    letter-spacing: 1px; text-transform: uppercase;
+    transition: background .15s;
+  }
+  #topbar button:hover { background: #a03030; }
+  #topbar button.secondary {
+    background: transparent; border-color: #555;
+  }
+  #topbar button.secondary:hover { background: #222; }
+
+  /* ── TABS ── */
+  #tabs {
+    display: flex; background: var(--darker);
+    border-bottom: 2px solid var(--blood);
+  }
+  .tab {
+    padding: 8px 22px; cursor: pointer;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 12px; letter-spacing: 1px;
+    text-transform: uppercase; color: var(--text-dim);
+    border-right: 1px solid #222;
+    transition: all .15s;
+  }
+  .tab:hover { color: var(--text); background: #1a1a1a; }
+  .tab.active { color: var(--text); background: var(--blood); }
+
+  /* ── SHEET PAGES ── */
+  .sheet-page { display: none; padding: 14px; max-width: 960px; margin: 0 auto; }
+  .sheet-page.active { display: block; }
+
+  /* ── SECTION HEADER ── */
+  .sec-header {
+    background: var(--blood);
+    padding: 3px 8px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px; font-weight: 700;
+    letter-spacing: 2px; text-transform: uppercase;
+    color: var(--text);
+    display: flex; align-items: center; gap: 8px;
+    margin-bottom: 2px;
+  }
+  .sec-header::before { content: '▶'; font-size: 9px; }
+
+  /* ── PANEL ── */
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    margin-bottom: 10px;
+  }
+
+  /* ── INPUTS ── */
+  input[type=text], textarea {
+    background: var(--input-bg);
+    border: none; border-bottom: 1px solid #333;
+    color: var(--text);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    padding: 2px 4px; width: 100%;
+    outline: none; transition: background .1s, border-color .1s;
+  }
+  input[type=text]:focus, textarea:focus {
+    background: var(--input-focus);
+    border-bottom-color: var(--blood);
+  }
+  textarea { resize: vertical; min-height: 40px; line-height: 1.4; }
+
+  /* ── HANDLE / ROLE ROW ── */
+  .handle-row {
+    display: grid; grid-template-columns: 1fr 1fr auto;
+    gap: 8px; padding: 8px 10px; background: var(--panel);
+    border: 1px solid var(--border); margin-bottom: 10px;
+    align-items: end;
+  }
+  .handle-row label { font-family: 'Share Tech Mono',monospace; font-size:10px; color:var(--text-dim); display:block; margin-bottom:2px; }
+  .handle-row .ability-box { display:flex; align-items:center; gap:6px; }
+  .handle-row .ability-box label { white-space:nowrap; }
+  .ability-num { width:60px !important; font-size:14px !important; text-align:center; }
+
+  /* ── STATS BAR ── */
+  .stats-bar {
+    display: grid; grid-template-columns: repeat(10,1fr);
+    background: var(--panel); border: 1px solid var(--border);
+    margin-bottom: 10px;
+  }
+  .stat-cell {
+    border-right: 1px solid var(--border);
+    text-align: center; padding: 4px 2px;
+  }
+  .stat-cell:last-child { border-right: none; }
+  .stat-label {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 9px; color: var(--text-dim);
+    letter-spacing: 1px; margin-bottom: 4px;
+  }
+  .stat-input {
+    width: 100% !important; text-align: center !important;
+    font-size: 18px !important; font-weight: 700;
+    border-bottom: 2px solid var(--blood) !important;
+    padding: 2px !important;
+  }
+
+  /* ── SKILL TABLE ── */
+  .skills-grid {
+    display: grid; grid-template-columns: 1fr 1fr 1fr;
+    gap: 4px; margin-bottom: 10px;
+  }
+  .skill-col { background: var(--panel); border: 1px solid var(--border); }
+  .skill-subsec {
+    background: #000; padding: 2px 6px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px; font-weight: 700; color: var(--text);
+    letter-spacing: 1px; text-transform: uppercase;
+  }
+  .skill-col-header {
+    display: grid; grid-template-columns: 1fr 28px 28px 28px 32px;
+    padding: 1px 4px; border-bottom: 1px solid var(--border);
+    background: #161616;
+  }
+  .skill-col-header span {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 8px; color: var(--text-dim);
+    text-align: center; letter-spacing: .5px;
+  }
+  .skill-col-header span:first-child { text-align: left; }
+  .skill-row {
+    display: grid; grid-template-columns: 1fr 28px 28px 28px 32px;
+    border-bottom: 1px solid #1e1e1e;
+    align-items: center; padding: 0 4px;
+    min-height: var(--row-h);
+  }
+  .skill-row:last-child { border-bottom: none; }
+  .skill-row:hover { background: rgba(122,31,31,0.08); }
+  .skill-name {
+    font-size: 11px; color: var(--text);
+    padding: 1px 0; white-space: nowrap;
+    overflow: hidden; text-overflow: ellipsis;
+  }
+  .skill-name.subsec-name {
+    font-weight: 700; color: var(--text);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+  }
+  .skill-row input {
+    text-align: center; font-size: 10px;
+    border-bottom: 1px solid #2a2a2a !important;
+  }
+  .x2-badge {
+    font-size: 8px; color: var(--blood);
+    font-family: 'Share Tech Mono', monospace;
+    margin-left: 2px;
+  }
+  .skill-name-wrap { display:flex; align-items:center; }
+
+  /* ── WEAPONS ── */
+  .weapons-table { width:100%; border-collapse:collapse; }
+  .weapons-table th {
+    background: #000; padding: 3px 6px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 9px; color: var(--text-dim);
+    text-align: left; letter-spacing: 1px;
+    border-bottom: 1px solid var(--border);
+  }
+  .weapons-table td { padding: 1px 3px; border-bottom: 1px solid #1e1e1e; }
+  .weapons-table tr:last-child td { border-bottom: none; }
+  .weapons-table input { font-size: 11px; }
+
+  /* ── ARMOR + HP ── */
+  .bottom-row {
+    display: grid; grid-template-columns: 1fr 1fr 240px;
+    gap: 8px; margin-bottom: 10px;
+  }
+  .armor-table { width:100%; border-collapse:collapse; }
+  .armor-table th {
+    background:#000; padding:2px 6px;
+    font-family:'Share Tech Mono',monospace; font-size:9px; color:var(--text-dim);
+    border-bottom:1px solid var(--border); letter-spacing:1px;
+  }
+  .armor-table td { padding:2px 4px; border-bottom:1px solid #1e1e1e; }
+  .armor-table tr:last-child td { border-bottom:none; }
+  .armor-table .row-label {
+    font-size:11px; color:var(--text-dim); white-space:nowrap;
+  }
+
+  .hp-panel { background:var(--panel); border:1px solid var(--border); padding:8px; }
+  .hp-row { display:flex; gap:8px; margin-bottom:6px; }
+  .hp-box { flex:1; text-align:center; }
+  .hp-box label { font-family:'Share Tech Mono',monospace; font-size:9px; color:var(--text-dim); display:block; margin-bottom:3px; }
+  .hp-box input { text-align:center; font-size:22px !important; font-weight:700; border-bottom:2px solid var(--blood) !important; }
+  .hp-sub { margin-bottom:5px; }
+  .hp-sub label { font-family:'Share Tech Mono',monospace; font-size:9px; color:var(--text-dim); display:block; margin-bottom:2px; }
+
+  /* ── PAGE 2 ── */
+  .lp-grid { display:grid; gap:6px; }
+  .lp-row  { display:grid; gap:6px; }
+  .lp-row.cols-2 { grid-template-columns:1fr 1fr; }
+  .lp-row.cols-3 { grid-template-columns:1fr 1fr 1fr; }
+  .lp-row.cols-12 { grid-template-columns:1.2fr 1fr; }
+  .lp-row.cols-21 { grid-template-columns:1fr 1.2fr; }
+  .lp-field label {
+    display:block; font-family:'Share Tech Mono',monospace;
+    font-size:9px; color:var(--text-dim); margin-bottom:2px;
+    letter-spacing:.5px; text-transform:uppercase;
+  }
+  .lp-field { background:var(--panel); border:1px solid var(--border); padding:6px 8px; }
+
+  .kc-grid { display:grid; grid-template-columns:1.5fr 1fr 1fr 1.5fr; gap:6px; }
+
+  .stuff-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px; }
+  .gear-list { display:flex; flex-direction:column; gap:3px; }
+
+  /* ── PAGE 3 CYBERWARE ── */
+  .cw-layout {
+    display:grid; grid-template-columns:1fr 1fr 1fr;
+    gap:6px; margin-bottom:10px;
+  }
+  .cw-col { background:var(--panel); border:1px solid var(--border); }
+  .cw-header {
+    background:var(--blood-dk); padding:3px 8px;
+    font-family:'Share Tech Mono',monospace; font-size:10px;
+    color:var(--text); letter-spacing:1px; text-transform:uppercase;
+    border-bottom:1px solid var(--blood);
+    display:flex; align-items:center; justify-content:space-between;
+  }
+  .cw-side { font-size:9px; color:var(--text-dim); }
+  .cw-slot { display:grid; grid-template-columns:1fr 32px; border-bottom:1px solid #1e1e1e; align-items:center; }
+  .cw-slot:last-child { border-bottom:none; }
+  .cw-slot input { font-size:10px; }
+  .cw-slot .cw-val { border-left:1px solid #222; }
+
+  .cyberdeck-panel { background:var(--panel); border:1px solid var(--border); padding:8px; margin-bottom:10px; }
+  .deck-header { display:flex; gap:12px; align-items:center; margin-bottom:8px; }
+  .deck-header label { font-family:'Share Tech Mono',monospace; font-size:10px; color:var(--text-dim); }
+  .deck-header input { width:120px; }
+  .deck-slot-input { width:36px !important; text-align:center; }
+  .prg-table { width:100%; border-collapse:collapse; }
+  .prg-table th {
+    background:#000; padding:2px 6px;
+    font-family:'Share Tech Mono',monospace; font-size:9px; color:var(--text-dim);
+    text-align:left; border-bottom:1px solid var(--border);
+  }
+  .prg-table td { padding:1px 3px; border-bottom:1px solid #1e1e1e; }
+
+  /* ── HUMANITY HEADER ── */
+  .humanity-row {
+    display:flex; gap:20px; align-items:center;
+    background:var(--panel); border:1px solid var(--border);
+    padding:8px 12px; margin-bottom:10px;
+  }
+  .humanity-row .hf { display:flex; flex-direction:column; gap:2px; }
+  .humanity-row label { font-family:'Share Tech Mono',monospace; font-size:9px; color:var(--text-dim); }
+  .humanity-row input { width:100px; font-size:14px; text-align:center; }
+
+  /* ── MISC UTIL ── */
+  .label-small {
+    font-family:'Share Tech Mono',monospace; font-size:9px;
+    color:var(--text-dim); display:block; margin-bottom:2px;
+    letter-spacing:.5px; text-transform:uppercase;
+  }
+  .field-row { display:flex; gap:6px; align-items:flex-end; margin-bottom:6px; }
+  .field-row > * { flex:1; }
+
+  /* ── NOTIFICATION ── */
+  #notif {
+    position:fixed; bottom:20px; right:20px;
+    background:var(--blood); color:var(--text);
+    padding:10px 18px; border-radius:3px;
+    font-family:'Share Tech Mono',monospace; font-size:12px;
+    opacity:0; pointer-events:none; transition:opacity .3s;
+    z-index:999;
+  }
+  #notif.show { opacity:1; }
+
+  /* scrollbar */
+  ::-webkit-scrollbar { width:6px; height:6px; }
+  ::-webkit-scrollbar-track { background:#111; }
+  ::-webkit-scrollbar-thumb { background:var(--blood); border-radius:3px; }
+</style>
+</head>
+<body>
+
+<div id="topbar">
+  <div class="logo">Cyber<span>punk</span> RED</div>
+  <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:#666;letter-spacing:1px;">CHARACTER SHEET</div>
+  <div class="spacer"></div>
+  <button class="secondary" onclick="loadJSON()">⬆ CARREGAR JSON</button>
+  <button onclick="saveJSON()">⬇ SALVAR JSON</button>
+  <input type="file" id="fileInput" accept=".json" style="display:none" onchange="handleFile(event)">
+</div>
+
+<div id="tabs">
+  <div class="tab active" onclick="showTab(0)">01 · FICHA PRINCIPAL</div>
+  <div class="tab" onclick="showTab(1)">02 · LIFEPATH</div>
+  <div class="tab" onclick="showTab(2)">03 · CYBERWARE</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     PAGE 1 – MAIN SHEET
+     ═══════════════════════════════════════════════════════ -->
+<div class="sheet-page active" id="page-0">
+
+  <!-- Handle / Role -->
+  <div class="handle-row">
+    <div>
+      <label>HANDLE /</label>
+      <input type="text" id="handle" placeholder="Nome do personagem">
+    </div>
+    <div>
+      <label>ROLE /</label>
+      <input type="text" id="role" placeholder="Classe / Função">
+    </div>
+    <div class="ability-box">
+      <label>ABILITY #</label>
+      <input type="text" id="ability_num" class="ability-num" placeholder="—">
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-bar">
+    <div class="stat-cell"><div class="stat-label">INT</div><input type="text" id="stat_INT" class="stat-input"></div>
+    <div class="stat-cell"><div class="stat-label">REF</div><input type="text" id="stat_REF" class="stat-input"></div>
+    <div class="stat-cell"><div class="stat-label">DEX</div><input type="text" id="stat_DEX" class="stat-input"></div>
+    <div class="stat-cell"><div class="stat-label">TECH</div><input type="text" id="stat_TECH" class="stat-input"></div>
+    <div class="stat-cell"><div class="stat-label">COOL</div><input type="text" id="stat_COOL" class="stat-input"></div>
+    <div class="stat-cell"><div class="stat-label">WILL</div><input type="text" id="stat_WILL" class="stat-input"></div>
+    <div class="stat-cell"><div class="stat-label">LUCK</div><input type="text" id="stat_LUCK" class="stat-input"></div>
+    <div class="stat-cell"><div class="stat-label">MOVE</div><input type="text" id="stat_MOVE" class="stat-input"></div>
+    <div class="stat-cell"><div class="stat-label">BODY</div><input type="text" id="stat_BODY" class="stat-input"></div>
+    <div class="stat-cell"><div class="stat-label">EMP</div><input type="text" id="stat_EMP" class="stat-input"></div>
+  </div>
+
+  <!-- Skills grid: 3 columns -->
+  <div class="skills-grid">
+
+    <!-- COL 1 -->
+    <div class="skill-col">
+      <!-- AWARENESS -->
+      <div class="skill-subsec">Awareness</div>
+      <div class="skill-col-header"><span>Habilidade</span><span>MOD</span><span>NVL</span><span>STAT</span><span>BASE</span></div>
+      <div class="skill-row"><div class="skill-name skill-subsec-name">Concentration</div><input type="text" id="sk_aw_concentration_mod"><input type="text" id="sk_aw_concentration_lvl"><input type="text" id="sk_aw_concentration_stat"><input type="text" id="sk_aw_concentration_base"></div>
+      <div class="skill-row"><div class="skill-name">Conceal/Reveal Object</div><input type="text" id="sk_aw_conceal_mod"><input type="text" id="sk_aw_conceal_lvl"><input type="text" id="sk_aw_conceal_stat"><input type="text" id="sk_aw_conceal_base"></div>
+      <div class="skill-row"><div class="skill-name">Lip Reading</div><input type="text" id="sk_aw_lip_mod"><input type="text" id="sk_aw_lip_lvl"><input type="text" id="sk_aw_lip_stat"><input type="text" id="sk_aw_lip_base"></div>
+      <div class="skill-row"><div class="skill-name skill-subsec-name">Perception</div><input type="text" id="sk_aw_perception_mod"><input type="text" id="sk_aw_perception_lvl"><input type="text" id="sk_aw_perception_stat"><input type="text" id="sk_aw_perception_base"></div>
+      <div class="skill-row"><div class="skill-name">Tracking</div><input type="text" id="sk_aw_tracking_mod"><input type="text" id="sk_aw_tracking_lvl"><input type="text" id="sk_aw_tracking_stat"><input type="text" id="sk_aw_tracking_base"></div>
+      <!-- BODY -->
+      <div class="skill-subsec">Body</div>
+      <div class="skill-col-header"><span>Habilidade</span><span>MOD</span><span>NVL</span><span>STAT</span><span>BASE</span></div>
+      <div class="skill-row"><div class="skill-name skill-subsec-name">Athletics</div><input type="text" id="sk_bo_athletics_mod"><input type="text" id="sk_bo_athletics_lvl"><input type="text" id="sk_bo_athletics_stat"><input type="text" id="sk_bo_athletics_base"></div>
+      <div class="skill-row"><div class="skill-name">Contortionist</div><input type="text" id="sk_bo_contortionist_mod"><input type="text" id="sk_bo_contortionist_lvl"><input type="text" id="sk_bo_contortionist_stat"><input type="text" id="sk_bo_contortionist_base"></div>
+      <div class="skill-row"><div class="skill-name">Dance</div><input type="text" id="sk_bo_dance_mod"><input type="text" id="sk_bo_dance_lvl"><input type="text" id="sk_bo_dance_stat"><input type="text" id="sk_bo_dance_base"></div>
+      <div class="skill-row"><div class="skill-name">Endurance</div><input type="text" id="sk_bo_endurance_mod"><input type="text" id="sk_bo_endurance_lvl"><input type="text" id="sk_bo_endurance_stat"><input type="text" id="sk_bo_endurance_base"></div>
+      <div class="skill-row"><div class="skill-name">Resist Torture/Drugs</div><input type="text" id="sk_bo_resist_mod"><input type="text" id="sk_bo_resist_lvl"><input type="text" id="sk_bo_resist_stat"><input type="text" id="sk_bo_resist_base"></div>
+      <div class="skill-row"><div class="skill-name skill-subsec-name">Stealth</div><input type="text" id="sk_bo_stealth_mod"><input type="text" id="sk_bo_stealth_lvl"><input type="text" id="sk_bo_stealth_stat"><input type="text" id="sk_bo_stealth_base"></div>
+      <!-- CONTROL -->
+      <div class="skill-subsec">Control</div>
+      <div class="skill-col-header"><span>Habilidade</span><span>MOD</span><span>NVL</span><span>STAT</span><span>BASE</span></div>
+      <div class="skill-row"><div class="skill-name">Drive Land Vehicle</div><input type="text" id="sk_ct_drive_mod"><input type="text" id="sk_ct_drive_lvl"><input type="text" id="sk_ct_drive_stat"><input type="text" id="sk_ct_drive_base"></div>
+      <div class="skill-row"><div class="skill-name">Pilot Air Vehicle <span class="x2-badge">x2</span></div><input type="text" id="sk_ct_pilot_air_mod"><input type="text" id="sk_ct_pilot_air_lvl"><input type="text" id="sk_ct_pilot_air_stat"><input type="text" id="sk_ct_pilot_air_base"></div>
+      <div class="skill-row"><div class="skill-name">Pilot Sea Vehicle</div><input type="text" id="sk_ct_pilot_sea_mod"><input type="text" id="sk_ct_pilot_sea_lvl"><input type="text" id="sk_ct_pilot_sea_stat"><input type="text" id="sk_ct_pilot_sea_base"></div>
+      <div class="skill-row"><div class="skill-name">Riding</div><input type="text" id="sk_ct_riding_mod"><input type="text" id="sk_ct_riding_lvl"><input type="text" id="sk_ct_riding_stat"><input type="text" id="sk_ct_riding_base"></div>
+      <!-- EDUCATION -->
+      <div class="skill-subsec">Education</div>
+      <div class="skill-col-header"><span>Habilidade</span><span>MOD</span><span>NVL</span><span>STAT</span><span>BASE</span></div>
+      <div class="skill-row"><div class="skill-name">Accounting</div><input type="text" id="sk_ed_accounting_mod"><input type="text" id="sk_ed_accounting_lvl"><input type="text" id="sk_ed_accounting_stat"><input type="text" id="sk_ed_accounting_base"></div>
+      <div class="skill-row"><div class="skill-name">Animal Handling</div><input type="text" id="sk_ed_animal_mod"><input type="text" id="sk_ed_animal_lvl"><input type="text" id="sk_ed_animal_stat"><input type="text" id="sk_ed_animal_base"></div>
+      <div class="skill-row"><div class="skill-name">Bureaucracy</div><input type="text" id="sk_ed_bureaucracy_mod"><input type="text" id="sk_ed_bureaucracy_lvl"><input type="text" id="sk_ed_bureaucracy_stat"><input type="text" id="sk_ed_bureaucracy_base"></div>
+      <div class="skill-row"><div class="skill-name">Business</div><input type="text" id="sk_ed_business_mod"><input type="text" id="sk_ed_business_lvl"><input type="text" id="sk_ed_business_stat"><input type="text" id="sk_ed_business_base"></div>
+      <div class="skill-row"><div class="skill-name">Composition</div><input type="text" id="sk_ed_composition_mod"><input type="text" id="sk_ed_composition_lvl"><input type="text" id="sk_ed_composition_stat"><input type="text" id="sk_ed_composition_base"></div>
+      <div class="skill-row"><div class="skill-name">Criminology</div><input type="text" id="sk_ed_criminology_mod"><input type="text" id="sk_ed_criminology_lvl"><input type="text" id="sk_ed_criminology_stat"><input type="text" id="sk_ed_criminology_base"></div>
+      <div class="skill-row"><div class="skill-name">Cryptography</div><input type="text" id="sk_ed_cryptography_mod"><input type="text" id="sk_ed_cryptography_lvl"><input type="text" id="sk_ed_cryptography_stat"><input type="text" id="sk_ed_cryptography_base"></div>
+      <div class="skill-row"><div class="skill-name">Deduction</div><input type="text" id="sk_ed_deduction_mod"><input type="text" id="sk_ed_deduction_lvl"><input type="text" id="sk_ed_deduction_stat"><input type="text" id="sk_ed_deduction_base"></div>
+      <div class="skill-row"><div class="skill-name skill-subsec-name">Education</div><input type="text" id="sk_ed_education_mod"><input type="text" id="sk_ed_education_lvl"><input type="text" id="sk_ed_education_stat"><input type="text" id="sk_ed_education_base"></div>
+      <div class="skill-row"><div class="skill-name">Gamble</div><input type="text" id="sk_ed_gamble_mod"><input type="text" id="sk_ed_gamble_lvl"><input type="text" id="sk_ed_gamble_stat"><input type="text" id="sk_ed_gamble_base"></div>
+      <div class="skill-row"><div class="skill-name">Language</div><input type="text" id="sk_ed_language_mod"><input type="text" id="sk_ed_language_lvl"><input type="text" id="sk_ed_language_stat"><input type="text" id="sk_ed_language_base"></div>
+      <div class="skill-row"><div class="skill-name">↳ Streetslang</div><input type="text" id="sk_ed_streetslang_mod"><input type="text" id="sk_ed_streetslang_lvl"><input type="text" id="sk_ed_streetslang_stat"><input type="text" id="sk_ed_streetslang_base"></div>
+      <div class="skill-row"><div class="skill-name"><input type="text" id="sk_ed_custom1_name" placeholder="(custom)"></div><input type="text" id="sk_ed_custom1_mod"><input type="text" id="sk_ed_custom1_lvl"><input type="text" id="sk_ed_custom1_stat"><input type="text" id="sk_ed_custom1_base"></div>
+      <div class="skill-row"><div class="skill-name"><input type="text" id="sk_ed_custom2_name" placeholder="(custom)"></div><input type="text" id="sk_ed_custom2_mod"><input type="text" id="sk_ed_custom2_lvl"><input type="text" id="sk_ed_custom2_stat"><input type="text" id="sk_ed_custom2_base"></div>
+    </div>
+
+    <!-- COL 2 -->
+    <div class="skill-col">
+      <!-- EDUCATION (continued) -->
+      <div class="skill-subsec">Education (cont.)</div>
+      <div class="skill-col-header"><span>Habilidade</span><span>MOD</span><span>NVL</span><span>STAT</span><span>BASE</span></div>
+      <div class="skill-row"><div class="skill-name">Library Search</div><input type="text" id="sk_eb_library_mod"><input type="text" id="sk_eb_library_lvl"><input type="text" id="sk_eb_library_stat"><input type="text" id="sk_eb_library_base"></div>
+      <div class="skill-row"><div class="skill-name">Local Expert</div><input type="text" id="sk_eb_local_mod"><input type="text" id="sk_eb_local_lvl"><input type="text" id="sk_eb_local_stat"><input type="text" id="sk_eb_local_base"></div>
+      <div class="skill-row"><div class="skill-name">↳ Your Home</div><input type="text" id="sk_eb_yourhome_mod"><input type="text" id="sk_eb_yourhome_lvl"><input type="text" id="sk_eb_yourhome_stat"><input type="text" id="sk_eb_yourhome_base"></div>
+      <div class="skill-row"><div class="skill-name"><input type="text" id="sk_eb_custom1_name" placeholder="(custom)"></div><input type="text" id="sk_eb_custom1_mod"><input type="text" id="sk_eb_custom1_lvl"><input type="text" id="sk_eb_custom1_stat"><input type="text" id="sk_eb_custom1_base"></div>
+      <div class="skill-row"><div class="skill-name"><input type="text" id="sk_eb_custom2_name" placeholder="(custom)"></div><input type="text" id="sk_eb_custom2_mod"><input type="text" id="sk_eb_custom2_lvl"><input type="text" id="sk_eb_custom2_stat"><input type="text" id="sk_eb_custom2_base"></div>
+      <div class="skill-row"><div class="skill-name">Science</div><input type="text" id="sk_eb_science_mod"><input type="text" id="sk_eb_science_lvl"><input type="text" id="sk_eb_science_stat"><input type="text" id="sk_eb_science_base"></div>
+      <div class="skill-row"><div class="skill-name"><input type="text" id="sk_eb_custom3_name" placeholder="(custom)"></div><input type="text" id="sk_eb_custom3_mod"><input type="text" id="sk_eb_custom3_lvl"><input type="text" id="sk_eb_custom3_stat"><input type="text" id="sk_eb_custom3_base"></div>
+      <div class="skill-row"><div class="skill-name"><input type="text" id="sk_eb_custom4_name" placeholder="(custom)"></div><input type="text" id="sk_eb_custom4_mod"><input type="text" id="sk_eb_custom4_lvl"><input type="text" id="sk_eb_custom4_stat"><input type="text" id="sk_eb_custom4_base"></div>
+      <div class="skill-row"><div class="skill-name">Tactics</div><input type="text" id="sk_eb_tactics_mod"><input type="text" id="sk_eb_tactics_lvl"><input type="text" id="sk_eb_tactics_stat"><input type="text" id="sk_eb_tactics_base"></div>
+      <div class="skill-row"><div class="skill-name">Wilderness Survival</div><input type="text" id="sk_eb_wilderness_mod"><input type="text" id="sk_eb_wilderness_lvl"><input type="text" id="sk_eb_wilderness_stat"><input type="text" id="sk_eb_wilderness_base"></div>
+      <!-- FIGHTING -->
+      <div class="skill-subsec">Fighting</div>
+      <div class="skill-col-header"><span>Habilidade</span><span>MOD</span><span>NVL</span><span>STAT</span><span>BASE</span></div>
+      <div class="skill-row"><div class="skill-name skill-subsec-name">Brawling</div><input type="text" id="sk_fi_brawling_mod"><input type="text" id="sk_fi_brawling_lvl"><input type="text" id="sk_fi_brawling_stat"><input type="text" id="sk_fi_brawling_base"></div>
+      <div class="skill-row"><div class="skill-name">Evasion</div><input type="text" id="sk_fi_evasion_mod"><input type="text" id="sk_fi_evasion_lvl"><input type="text" id="sk_fi_evasion_stat"><input type="text" id="sk_fi_evasion_base"></div>
+      <div class="skill-row"><div class="skill-name">Martial Arts <span class="x2-badge">x2</span></div><input type="text" id="sk_fi_martial_mod"><input type="text" id="sk_fi_martial_lvl"><input type="text" id="sk_fi_martial_stat"><input type="text" id="sk_fi_martial_base"></div>
+      <div class="skill-row"><div class="skill-name"><input type="text" id="sk_fi_custom1_name" placeholder="(custom)"></div><input type="text" id="sk_fi_custom1_mod"><input type="text" id="sk_fi_custom1_lvl"><input type="text" id="sk_fi_custom1_stat"><input type="text" id="sk_fi_custom1_base"></div>
+      <div class="skill-row"><div class="skill-name"><input type="text" id="sk_fi_custom2_name" placeholder="(custom)"></div><input type="text" id="sk_fi_custom2_mod"><input type="text" id="sk_fi_custom2_lvl"><input type="text" id="sk_fi_custom2_stat"><input type="text" id="sk_fi_custom2_base"></div>
+      <div class="skill-row"><div class="skill-name skill-subsec-name">Melee Weapon</div><input type="text" id="sk_fi_melee_mod"><input type="text" id="sk_fi_melee_lvl"><input type="text" id="sk_fi_melee_stat"><input type="text" id="sk_fi_melee_base"></div>
+      <!-- PERFORMANCE -->
+      <div class="skill-subsec">Performance</div>
+      <div class="skill-col-header"><span>Habilidade</span><span>MOD</span><span>NVL</span><span>STAT</span><span>BASE</span></div>
+      <div class="skill-row"><div class="skill-name">Acting</div><input type="text" id="sk_pe_acting_mod"><input type="text" id="sk_pe_acting_lvl"><input type="text" id="sk_pe_acting_stat"><input type="text" id="sk_pe_acting_base"></div>
+      <div class="skill-row"><div class="skill-name">Play Instrument</div><input type="text" id="sk_pe_instrument_mod"><input type="text" id="sk_pe_instrument_lvl"><input type="text" id="sk_pe_instrument_stat"><input type="text" id="sk_pe_instrument_base"></div>
+      <div class="skill-row"><div class="skill-name"><input type="text" id="sk_pe_custom1_name" placeholder="(custom)"></div><input type="text" id="sk_pe_custom1_mod"><input type="text" id="sk_pe_custom1_lvl"><input type="text" id="sk_pe_custom1_stat"><input type="text" id="sk_pe_custom1_base"></div>
+      <div class="skill-row"><div class="skill-name"><input type="text" id="sk_pe_custom2_name" placeholder="(custom)"></div><input type="text" id="sk_pe_custom2_mod"><input type="text" id="sk_pe_custom2_lvl"><input type="text" id="sk_pe_custom2_stat"><input type="text" id="sk_pe_custom2_base"></div>
+      <!-- RANGED WEAPONS -->
+      <div class="skill-subsec">Ranged Weapons</div>
+      <div class="skill-col-header"><span>Habilidade</span><span>MOD</span><span>NVL</span><span>STAT</span><span>BASE</span></div>
+      <div class="skill-row"><div class="skill-name">Archery</div><input type="text" id="sk_rw_archery_mod"><input type="text" id="sk_rw_archery_lvl"><input type="text" id="sk_rw_archery_stat"><input type="text" id="sk_rw_archery_base"></div>
+      <div class="skill-row"><div class="skill-name">Autofire <span class="x2-badge">x2</span></div><input type="text" id="sk_rw_autofire_mod"><input type="text" id="sk_rw_autofire_lvl"><input type="text" id="sk_rw_autofire_stat"><input type="text" id="sk_rw_autofire_base"></div>
+      <div class="skill-row"><div class="skill-name">Handgun</div><input type="text" id="sk_rw_handgun_mod"><input type="text" id="sk_rw_handgun_lvl"><input type="text" id="sk_rw_handgun_stat"><input type="text" id="sk_rw_handgun_base"></div>
+      <div class="skill-row"><div class="skill-name">Heavy Weapons <span class="x2-badge">x2</span></div><input type="text" id="sk_rw_heavy_mod"><input type="text" id="sk_rw_heavy_lvl"><input type="text" id="sk_rw_heavy_stat"><input type="text" id="sk_rw_heavy_base"></div>
+      <div class="skill-row"><div class="skill-name">Shoulder Arms</div><input type="text" id="sk_rw_shoulder_mod"><input type="text" id="sk_rw_shoulder_lvl"><input type="text" id="sk_rw_shoulder_stat"><input type="text" id="sk_rw_shoulder_base"></div>
+      <!-- SOCIAL -->
+      <div class="skill-subsec">Social</div>
+      <div class="skill-col-header"><span>Habilidade</span><span>MOD</span><span>NVL</span><span>STAT</span><span>BASE</span></div>
+      <div class="skill-row"><div class="skill-name">Bribery</div><input type="text" id="sk_so_bribery_mod"><input type="text" id="sk_so_bribery_lvl"><input type="text" id="sk_so_bribery_stat"><input type="text" id="sk_so_bribery_base"></div>
+      <div class="skill-row"><div class="skill-name skill-subsec-name">Conversation</div><input type="text" id="sk_so_conversation_mod"><input type="text" id="sk_so_conversation_lvl"><input type="text" id="sk_so_conversation_stat"><input type="text" id="sk_so_conversation_base"></div>
+      <div class="skill-row"><div class="skill-name">Human Perception</div><input type="text" id="sk_so_human_mod"><input type="text" id="sk_so_human_lvl"><input type="text" id="sk_so_human_stat"><input type="text" id="sk_so_human_base"></div>
+    </div>
+
+    <!-- COL 3 -->
+    <div class="skill-col">
+      <!-- SOCIAL continued -->
+      <div class="skill-subsec">Social (cont.)</div>
+      <div class="skill-col-header"><span>Habilidade</span><span>MOD</span><span>NVL</span><span>STAT</span><span>BASE</span></div>
+      <div class="skill-row"><div class="skill-name">Interrogation</div><input type="text" id="sk_sc_interrogation_mod"><input type="text" id="sk_sc_interrogation_lvl"><input type="text" id="sk_sc_interrogation_stat"><input type="text" id="sk_sc_interrogation_base"></div>
+      <div class="skill-row"><div class="skill-name skill-subsec-name">Persuasion</div><input type="text" id="sk_sc_persuasion_mod"><input type="text" id="sk_sc_persuasion_lvl"><input type="text" id="sk_sc_persuasion_stat"><input type="text" id="sk_sc_persuasion_base"></div>
+      <div class="skill-row"><div class="skill-name">Personal Grooming</div><input type="text" id="sk_sc_grooming_mod"><input type="text" id="sk_sc_grooming_lvl"><input type="text" id="sk_sc_grooming_stat"><input type="text" id="sk_sc_grooming_base"></div>
+      <div class="skill-row"><div class="skill-name">Streetwise</div><input type="text" id="sk_sc_streetwise_mod"><input type="text" id="sk_sc_streetwise_lvl"><input type="text" id="sk_sc_streetwise_stat"><input type="text" id="sk_sc_streetwise_base"></div>
+      <div class="skill-row"><div class="skill-name">Trading</div><input type="text" id="sk_sc_trading_mod"><input type="text" id="sk_sc_trading_lvl"><input type="text" id="sk_sc_trading_stat"><input type="text" id="sk_sc_trading_base"></div>
+      <div class="skill-row"><div class="skill-name">Wardrobe &amp; Style</div><input type="text" id="sk_sc_wardrobe_mod"><input type="text" id="sk_sc_wardrobe_lvl"><input type="text" id="sk_sc_wardrobe_stat"><input type="text" id="sk_sc_wardrobe_base"></div>
+      <!-- TECHNIQUE -->
+      <div class="skill-subsec">Technique</div>
+      <div class="skill-col-header"><span>Habilidade</span><span>MOD</span><span>NVL</span><span>STAT</span><span>BASE</span></div>
+      <div class="skill-row"><div class="skill-name">Air Vehicle Tech</div><input type="text" id="sk_te_air_mod"><input type="text" id="sk_te_air_lvl"><input type="text" id="sk_te_air_stat"><input type="text" id="sk_te_air_base"></div>
+      <div class="skill-row"><div class="skill-name">Basic Tech</div><input type="text" id="sk_te_basic_mod"><input type="text" id="sk_te_basic_lvl"><input type="text" id="sk_te_basic_stat"><input type="text" id="sk_te_basic_base"></div>
+      <div class="skill-row"><div class="skill-name">Cybertech</div><input type="text" id="sk_te_cybertech_mod"><input type="text" id="sk_te_cybertech_lvl"><input type="text" id="sk_te_cybertech_stat"><input type="text" id="sk_te_cybertech_base"></div>
+      <div class="skill-row"><div class="skill-name">Demolitions <span class="x2-badge">x2</span></div><input type="text" id="sk_te_demolitions_mod"><input type="text" id="sk_te_demolitions_lvl"><input type="text" id="sk_te_demolitions_stat"><input type="text" id="sk_te_demolitions_base"></div>
+      <div class="skill-row"><div class="skill-name">Electr./Security Tech <span class="x2-badge">x2</span></div><input type="text" id="sk_te_electr_mod"><input type="text" id="sk_te_electr_lvl"><input type="text" id="sk_te_electr_stat"><input type="text" id="sk_te_electr_base"></div>
+      <div class="skill-row"><div class="skill-name skill-subsec-name">First Aid</div><input type="text" id="sk_te_firstaid_mod"><input type="text" id="sk_te_firstaid_lvl"><input type="text" id="sk_te_firstaid_stat"><input type="text" id="sk_te_firstaid_base"></div>
+      <div class="skill-row"><div class="skill-name">Forgery</div><input type="text" id="sk_te_forgery_mod"><input type="text" id="sk_te_forgery_lvl"><input type="text" id="sk_te_forgery_stat"><input type="text" id="sk_te_forgery_base"></div>
+      <div class="skill-row"><div class="skill-name">Land Vehicle Tech</div><input type="text" id="sk_te_land_mod"><input type="text" id="sk_te_land_lvl"><input type="text" id="sk_te_land_stat"><input type="text" id="sk_te_land_base"></div>
+      <div class="skill-row"><div class="skill-name">Paint/Draw/Sculpt</div><input type="text" id="sk_te_paint_mod"><input type="text" id="sk_te_paint_lvl"><input type="text" id="sk_te_paint_stat"><input type="text" id="sk_te_paint_base"></div>
+      <div class="skill-row"><div class="skill-name">Paramedic <span class="x2-badge">x2</span></div><input type="text" id="sk_te_paramedic_mod"><input type="text" id="sk_te_paramedic_lvl"><input type="text" id="sk_te_paramedic_stat"><input type="text" id="sk_te_paramedic_base"></div>
+      <div class="skill-row"><div class="skill-name">Photography/Film</div><input type="text" id="sk_te_photo_mod"><input type="text" id="sk_te_photo_lvl"><input type="text" id="sk_te_photo_stat"><input type="text" id="sk_te_photo_base"></div>
+      <div class="skill-row"><div class="skill-name">Pick Lock</div><input type="text" id="sk_te_picklock_mod"><input type="text" id="sk_te_picklock_lvl"><input type="text" id="sk_te_picklock_stat"><input type="text" id="sk_te_picklock_base"></div>
+      <div class="skill-row"><div class="skill-name">Pick Pocket</div><input type="text" id="sk_te_pickpocket_mod"><input type="text" id="sk_te_pickpocket_lvl"><input type="text" id="sk_te_pickpocket_stat"><input type="text" id="sk_te_pickpocket_base"></div>
+      <div class="skill-row"><div class="skill-name">Sea Vehicle Tech</div><input type="text" id="sk_te_sea_mod"><input type="text" id="sk_te_sea_lvl"><input type="text" id="sk_te_sea_stat"><input type="text" id="sk_te_sea_base"></div>
+      <div class="skill-row"><div class="skill-name">Weapontech</div><input type="text" id="sk_te_weapontech_mod"><input type="text" id="sk_te_weapontech_lvl"><input type="text" id="sk_te_weapontech_stat"><input type="text" id="sk_te_weapontech_base"></div>
+      <!-- CUSTOM SKILLS -->
+      <div class="skill-subsec">Custom Skills</div>
+      <div class="skill-col-header"><span>Habilidade</span><span>MOD</span><span>NVL</span><span>STAT</span><span>BASE</span></div>
+      <div class="skill-row"><div class="skill-name"><input type="text" id="sk_cs_1_name" placeholder="(custom)"></div><input type="text" id="sk_cs_1_mod"><input type="text" id="sk_cs_1_lvl"><input type="text" id="sk_cs_1_stat"><input type="text" id="sk_cs_1_base"></div>
+      <div class="skill-row"><div class="skill-name"><input type="text" id="sk_cs_2_name" placeholder="(custom)"></div><input type="text" id="sk_cs_2_mod"><input type="text" id="sk_cs_2_lvl"><input type="text" id="sk_cs_2_stat"><input type="text" id="sk_cs_2_base"></div>
+      <div class="skill-row"><div class="skill-name"><input type="text" id="sk_cs_3_name" placeholder="(custom)"></div><input type="text" id="sk_cs_3_mod"><input type="text" id="sk_cs_3_lvl"><input type="text" id="sk_cs_3_stat"><input type="text" id="sk_cs_3_base"></div>
+      <div class="skill-row"><div class="skill-name"><input type="text" id="sk_cs_4_name" placeholder="(custom)"></div><input type="text" id="sk_cs_4_mod"><input type="text" id="sk_cs_4_lvl"><input type="text" id="sk_cs_4_stat"><input type="text" id="sk_cs_4_base"></div>
+      <div class="skill-row"><div class="skill-name"><input type="text" id="sk_cs_5_name" placeholder="(custom)"></div><input type="text" id="sk_cs_5_mod"><input type="text" id="sk_cs_5_lvl"><input type="text" id="sk_cs_5_stat"><input type="text" id="sk_cs_5_base"></div>
+      <div class="skill-row"><div class="skill-name"><input type="text" id="sk_cs_6_name" placeholder="(custom)"></div><input type="text" id="sk_cs_6_mod"><input type="text" id="sk_cs_6_lvl"><input type="text" id="sk_cs_6_stat"><input type="text" id="sk_cs_6_base"></div>
+      <div class="skill-row"><div class="skill-name"><input type="text" id="sk_cs_7_name" placeholder="(custom)"></div><input type="text" id="sk_cs_7_mod"><input type="text" id="sk_cs_7_lvl"><input type="text" id="sk_cs_7_stat"><input type="text" id="sk_cs_7_base"></div>
+      <div class="skill-row"><div class="skill-name"><input type="text" id="sk_cs_8_name" placeholder="(custom)"></div><input type="text" id="sk_cs_8_mod"><input type="text" id="sk_cs_8_lvl"><input type="text" id="sk_cs_8_stat"><input type="text" id="sk_cs_8_base"></div>
+      <div class="skill-row"><div class="skill-name"><input type="text" id="sk_cs_9_name" placeholder="(custom)"></div><input type="text" id="sk_cs_9_mod"><input type="text" id="sk_cs_9_lvl"><input type="text" id="sk_cs_9_stat"><input type="text" id="sk_cs_9_base"></div>
+    </div>
+  </div><!-- /skills-grid -->
+
+  <!-- WEAPONS -->
+  <div class="panel">
+    <div class="sec-header">Weapons</div>
+    <table class="weapons-table">
+      <thead><tr>
+        <th style="width:35%">Arma</th>
+        <th>DMG</th><th>Munição</th><th>ROF</th><th>Notas</th>
+      </tr></thead>
+      <tbody id="weapons-body"></tbody>
+    </table>
+  </div>
+
+  <!-- ARMOR + HP -->
+  <div class="bottom-row">
+    <div class="panel">
+      <div class="sec-header">Armor — Esquerda</div>
+      <table class="armor-table">
+        <thead><tr><th>Local</th><th>SP</th><th>Penalidade</th></tr></thead>
+        <tbody>
+          <tr><td class="row-label">Head</td><td><input type="text" id="arm_head_l_sp"></td><td><input type="text" id="arm_head_l_pen"></td></tr>
+          <tr><td class="row-label">Body</td><td><input type="text" id="arm_body_l_sp"></td><td><input type="text" id="arm_body_l_pen"></td></tr>
+          <tr><td class="row-label">Shield</td><td><input type="text" id="arm_shield_l_sp"></td><td><input type="text" id="arm_shield_l_pen"></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="panel">
+      <div class="sec-header">Armor — Direita</div>
+      <table class="armor-table">
+        <thead><tr><th>Local</th><th>SP</th><th>Penalidade</th></tr></thead>
+        <tbody>
+          <tr><td class="row-label">Head</td><td><input type="text" id="arm_head_r_sp"></td><td><input type="text" id="arm_head_r_pen"></td></tr>
+          <tr><td class="row-label">Body</td><td><input type="text" id="arm_body_r_sp"></td><td><input type="text" id="arm_body_r_pen"></td></tr>
+          <tr><td class="row-label">Shield</td><td><input type="text" id="arm_shield_r_sp"></td><td><input type="text" id="arm_shield_r_pen"></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="hp-panel">
+      <div style="font-family:'Share Tech Mono',monospace;font-size:11px;letter-spacing:1px;margin-bottom:8px;color:var(--text-dim);">▶ HIT POINTS</div>
+      <div class="hp-row">
+        <div class="hp-box"><label>MAX</label><input type="text" id="hp_max"></div>
+        <div class="hp-box"><label>NOW</label><input type="text" id="hp_now"></div>
+      </div>
+      <div class="hp-sub">
+        <label>SERIOUSLY WOUNDED (−2)</label>
+        <input type="text" id="hp_serious">
+      </div>
+      <div class="hp-sub">
+        <label>DEATH SAVE</label>
+        <input type="text" id="hp_death">
+      </div>
+      <div class="hp-sub">
+        <label>CRITICAL WOUNDS</label>
+        <textarea id="hp_critical" rows="2"></textarea>
+      </div>
+      <div class="hp-sub">
+        <label>ADDICTIONS</label>
+        <textarea id="addictions" rows="2"></textarea>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /page-0 -->
+
+<!-- ═══════════════════════════════════════════════════════
+     PAGE 2 – LIFEPATH
+     ═══════════════════════════════════════════════════════ -->
+<div class="sheet-page" id="page-1">
+
+  <div class="handle-row" style="margin-bottom:14px;">
+    <div><label>HANDLE /</label><input type="text" id="p2_handle"></div>
+    <div><label>ALIASES /</label><input type="text" id="p2_aliases"></div>
+  </div>
+
+  <div class="sec-header" style="margin-bottom:8px;">Lifepath</div>
+  <div class="lp-grid" style="margin-bottom:14px;">
+    <div class="lp-row cols-2">
+      <div class="lp-field"><label>Cultural Origins</label><textarea id="lp_cultural" rows="2"></textarea></div>
+      <div class="lp-field"><label>Personality</label><textarea id="lp_personality" rows="2"></textarea></div>
+    </div>
+    <div class="lp-row cols-12">
+      <div class="lp-field"><label>Clothes and Hair Style</label><textarea id="lp_clothes" rows="2"></textarea></div>
+      <div class="lp-field"><label>What You Value Most</label><textarea id="lp_value" rows="2"></textarea></div>
+    </div>
+    <div class="lp-row cols-3">
+      <div class="lp-field"><label>Feelings about People</label><textarea id="lp_feelings" rows="2"></textarea></div>
+      <div class="lp-field"><label>Most Valued Person</label><textarea id="lp_person" rows="2"></textarea></div>
+      <div class="lp-field"><label>Most Valued Possession</label><textarea id="lp_possession" rows="2"></textarea></div>
+    </div>
+    <div class="lp-row cols-3">
+      <div class="lp-field"><label>Family Background</label><textarea id="lp_family" rows="2"></textarea></div>
+      <div class="lp-field"><label>Childhood Environment</label><textarea id="lp_childhood" rows="2"></textarea></div>
+      <div class="lp-field"><label>Family Crisis</label><textarea id="lp_crisis" rows="2"></textarea></div>
+    </div>
+    <div class="lp-row cols-2">
+      <div class="lp-field"><label>Life Goals</label><textarea id="lp_goals" rows="3"></textarea></div>
+      <div class="lp-field"><label>Tragic Love Affairs</label><textarea id="lp_love" rows="3"></textarea></div>
+    </div>
+  </div>
+
+  <div class="sec-header" style="margin-bottom:8px;">Keepers and Career</div>
+  <div class="kc-grid" style="margin-bottom:8px;">
+    <div class="lp-field"><label>Friends</label><textarea id="kc_friends" rows="5"></textarea></div>
+    <div class="lp-field"><label>Enemies</label><textarea id="kc_enemies" rows="5"></textarea></div>
+    <div class="lp-field"><label>Why?</label><textarea id="kc_why" rows="5"></textarea></div>
+    <div class="lp-field"><label>What can they throw at you?</label><textarea id="kc_throw" rows="5"></textarea></div>
+  </div>
+  <div class="lp-row cols-2" style="margin-bottom:14px;">
+    <div class="lp-field"><label>Role-specific Lifepath</label><textarea id="kc_role" rows="4"></textarea></div>
+    <div style="display:flex;flex-direction:column;gap:6px;">
+      <div class="lp-field" style="flex:1"><label>Reputation and Events</label><textarea id="kc_rep" rows="2" style="height:100%"></textarea></div>
+      <div class="lp-field"><label>Improvement</label><textarea id="kc_improvement" rows="2"></textarea></div>
+    </div>
+  </div>
+
+  <div class="sec-header" style="margin-bottom:8px;">My Stuff</div>
+  <div class="stuff-grid" style="margin-bottom:6px;">
+    <div class="lp-field"><label>Housing</label><input type="text" id="ms_housing"></div>
+    <div class="lp-field"><label>Rent</label><input type="text" id="ms_rent"></div>
+    <div class="lp-field"><label>Lifestyle</label><input type="text" id="ms_lifestyle"></div>
+  </div>
+  <div class="stuff-grid">
+    <div class="lp-field"><label>Fashion</label><textarea id="ms_fashion" rows="6"></textarea></div>
+    <div class="lp-field">
+      <label>Gear</label>
+      <div class="gear-list" id="gear-list"></div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:4px;">
+      <div class="lp-field" style="flex:1">
+        <label>Gear (cont.)</label>
+        <div class="gear-list" id="gear-list2"></div>
+      </div>
+      <div class="lp-field"><label>Cash</label><input type="text" id="ms_cash"></div>
+    </div>
+  </div>
+
+</div><!-- /page-1 -->
+
+<!-- ═══════════════════════════════════════════════════════
+     PAGE 3 – CYBERWARE
+     ═══════════════════════════════════════════════════════ -->
+<div class="sheet-page" id="page-2">
+
+  <div class="humanity-row">
+    <div class="hf"><label>HANDLE /</label><input type="text" id="p3_handle"></div>
+    <div class="hf"><label>HUMANITY #</label><input type="text" id="p3_humanity"></div>
+    <div class="hf"><label>TOTAL LOSS #</label><input type="text" id="p3_total_loss"></div>
+  </div>
+
+  <div class="sec-header" style="margin-bottom:8px;">Cyberware</div>
+
+  <div class="cw-layout">
+    <!-- Cybereye R -->
+    <div class="cw-col" id="cw-eye-r">
+      <div class="cw-header">Cybereye <span class="cw-side">R</span></div>
+    </div>
+    <!-- Neural Link (center col) -->
+    <div class="cw-col" id="cw-neural">
+      <div class="cw-header">Neural Link</div>
+    </div>
+    <!-- Cybereye L -->
+    <div class="cw-col" id="cw-eye-l">
+      <div class="cw-header">Cybereye <span class="cw-side">L</span></div>
+    </div>
+  </div>
+
+  <div class="cw-layout">
+    <!-- Cyber arm R -->
+    <div class="cw-col" id="cw-arm-r">
+      <div class="cw-header">Cyber-arm/hand <span class="cw-side">R</span></div>
+    </div>
+    <!-- Cyberaudio Suite (center) -->
+    <div class="cw-col" id="cw-audio">
+      <div class="cw-header">Cyberaudio Suite</div>
+    </div>
+    <!-- Cyber arm L -->
+    <div class="cw-col" id="cw-arm-l">
+      <div class="cw-header">Cyber-arm/hand <span class="cw-side">L</span></div>
+    </div>
+  </div>
+
+  <div class="cw-layout">
+    <!-- Cyber leg R -->
+    <div class="cw-col" id="cw-leg-r">
+      <div class="cw-header">Cyber-leg/foot <span class="cw-side">R</span></div>
+    </div>
+    <!-- Internal (center) -->
+    <div class="cw-col" id="cw-internal">
+      <div class="cw-header">Internal</div>
+    </div>
+    <!-- Cyber leg L -->
+    <div class="cw-col" id="cw-leg-l">
+      <div class="cw-header">Cyber-leg/foot <span class="cw-side">L</span></div>
+    </div>
+  </div>
+
+  <div class="cw-layout">
+    <div class="cw-col" id="cw-fashion">
+      <div class="cw-header">Fashionware</div>
+    </div>
+    <div class="cw-col" id="cw-external">
+      <div class="cw-header">External</div>
+    </div>
+    <div class="cw-col" id="cw-borg">
+      <div class="cw-header">Borgware</div>
+    </div>
+  </div>
+
+  <!-- Cyberdeck -->
+  <div class="cyberdeck-panel">
+    <div class="sec-header" style="margin-bottom:8px;">Cyberdeck</div>
+    <div class="deck-header">
+      <label>DECK</label><input type="text" id="deck_name" placeholder="modelo">
+      <label>PRG SLOTS</label><input type="text" id="deck_prg" class="deck-slot-input">
+      <label>HDW SLOTS</label><input type="text" id="deck_hdw" class="deck-slot-input">
+      <label>UNI SLOTS</label><input type="text" id="deck_uni" class="deck-slot-input">
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+      <div>
+        <table class="prg-table">
+          <thead><tr><th style="width:55%">Programs / Hardware</th><th>ATK</th><th>DEF</th><th>REZ</th><th>Classe</th></tr></thead>
+          <tbody id="deck-prg-body"></tbody>
+        </table>
+      </div>
+      <div>
+        <table class="prg-table">
+          <thead><tr><th style="width:55%">Programs / Hardware</th><th>ATK</th><th>DEF</th><th>REZ</th><th>Classe</th></tr></thead>
+          <tbody id="deck-hdw-body"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /page-2 -->
+
+<div id="notif">✓ Salvo com sucesso</div>
+
+<script>
+// ─── BUILD DYNAMIC ROWS ──────────────────────────────────
+function makeWeaponRows() {
+  const tb = document.getElementById('weapons-body');
+  for (let i = 1; i <= 6; i++) {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><input type="text" id="wp_${i}_name" placeholder="Nome da arma"></td>
+      <td><input type="text" id="wp_${i}_dmg"></td>
+      <td><input type="text" id="wp_${i}_ammo"></td>
+      <td><input type="text" id="wp_${i}_rof"></td>
+      <td><input type="text" id="wp_${i}_notes"></td>`;
+    tb.appendChild(tr);
+  }
+}
+
+function makeGearRows() {
+  const g1 = document.getElementById('gear-list');
+  const g2 = document.getElementById('gear-list2');
+  for (let i = 1; i <= 8; i++) {
+    const inp = `<input type="text" id="gear_${i}" placeholder="item">`;
+    (i <= 4 ? g1 : g2).insertAdjacentHTML('beforeend', inp);
+  }
+}
+
+function makeCwSlots(containerId, prefix, count) {
+  const cont = document.getElementById(containerId);
+  for (let i = 1; i <= count; i++) {
+    const d = document.createElement('div');
+    d.className = 'cw-slot';
+    d.innerHTML = `<input type="text" id="${prefix}_${i}" placeholder="—"><input type="text" id="${prefix}_val_${i}" class="cw-val" placeholder="">`;
+    cont.appendChild(d);
+  }
+}
+
+function makeDeckRows() {
+  for (const [tbId, prefix, n] of [['deck-prg-body','dp',6],['deck-hdw-body','dh',6]]) {
+    const tb = document.getElementById(tbId);
+    for (let i = 1; i <= n; i++) {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td><input type="text" id="${prefix}_${i}_name"></td><td><input type="text" id="${prefix}_${i}_atk"></td><td><input type="text" id="${prefix}_${i}_def"></td><td><input type="text" id="${prefix}_${i}_rez"></td><td><input type="text" id="${prefix}_${i}_cls"></td>`;
+      tb.appendChild(tr);
+    }
+  }
+}
+
+// Init
+makeWeaponRows();
+makeGearRows();
+makeCwSlots('cw-eye-r',    'cw_eye_r', 8);
+makeCwSlots('cw-neural',   'cw_neural', 10);
+makeCwSlots('cw-eye-l',    'cw_eye_l', 8);
+makeCwSlots('cw-arm-r',    'cw_arm_r', 8);
+makeCwSlots('cw-audio',    'cw_audio', 8);
+makeCwSlots('cw-arm-l',    'cw_arm_l', 8);
+makeCwSlots('cw-leg-r',    'cw_leg_r', 8);
+makeCwSlots('cw-internal', 'cw_int', 8);
+makeCwSlots('cw-leg-l',    'cw_leg_l', 8);
+makeCwSlots('cw-fashion',  'cw_fashion', 7);
+makeCwSlots('cw-external', 'cw_ext', 8);
+makeCwSlots('cw-borg',     'cw_borg', 7);
+makeDeckRows();
+
+// ─── TABS ─────────────────────────────────────────────────
+function showTab(idx) {
+  document.querySelectorAll('.sheet-page').forEach((p,i) => p.classList.toggle('active', i===idx));
+  document.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('active', i===idx));
+}
+
+// ─── COLLECT ALL FIELD IDS ────────────────────────────────
+function getAllIds() {
+  return [...document.querySelectorAll('input[type=text], textarea')].map(el => el.id).filter(Boolean);
+}
+
+// ─── SAVE ─────────────────────────────────────────────────
+function saveJSON() {
+  const data = {};
+  getAllIds().forEach(id => {
+    const el = document.getElementById(id);
+    if (el) data[id] = el.value;
+  });
+  const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
+  const a = document.createElement('a');
+  const handle = data['handle'] || data['p2_handle'] || 'personagem';
+  a.href = URL.createObjectURL(blob);
+  a.download = `cyberpunk_${handle.replace(/\s+/g,'_')}.json`;
+  a.click();
+  notify('✓ JSON salvo!');
+}
+
+// ─── LOAD ─────────────────────────────────────────────────
+function loadJSON() {
+  document.getElementById('fileInput').click();
+}
+
+function handleFile(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const data = JSON.parse(e.target.result);
+      let loaded = 0;
+      Object.entries(data).forEach(([id, val]) => {
+        const el = document.getElementById(id);
+        if (el) { el.value = val; loaded++; }
+      });
+      notify(`✓ Carregado — ${loaded} campos`);
+    } catch(err) {
+      notify('✗ Erro ao carregar JSON');
+    }
+  };
+  reader.readAsText(file);
+  event.target.value = '';
+}
+
+// ─── NOTIFY ───────────────────────────────────────────────
+let notifTimer;
+function notify(msg) {
+  const n = document.getElementById('notif');
+  n.textContent = msg;
+  n.classList.add('show');
+  clearTimeout(notifTimer);
+  notifTimer = setTimeout(() => n.classList.remove('show'), 2500);
+}
+</script>
+</body>
+</html>
