@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -328,6 +328,126 @@
   ::-webkit-scrollbar { width:6px; height:6px; }
   ::-webkit-scrollbar-track { background:#111; }
   ::-webkit-scrollbar-thumb { background:var(--blood); border-radius:3px; }
+
+  /* ── CHARACTER IMAGE ── */
+  .char-image-container {
+    position: relative;
+    width: 130px; height: 160px;
+    background: var(--panel);
+    border: 2px dashed var(--border);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; flex-shrink: 0;
+    transition: border-color .2s;
+    overflow: hidden;
+  }
+  .char-image-container:hover { border-color: var(--blood); }
+  .char-image-container:hover .char-img-overlay { opacity: 1; }
+  .char-img-placeholder {
+    text-align: center;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 9px; color: var(--text-dim);
+    letter-spacing: 1px; line-height: 1.6;
+    pointer-events: none;
+  }
+  #char-image-preview {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+    object-fit: cover;
+    display: none;
+  }
+  .char-img-overlay {
+    position: absolute; inset: 0;
+    background: rgba(0,0,0,0.7);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 8px; opacity: 0; transition: opacity .2s;
+  }
+  .char-img-overlay button {
+    background: var(--blood); color: var(--text);
+    border: 1px solid #a03030; border-radius: 2px;
+    padding: 4px 10px; font-family: 'Rajdhani', sans-serif;
+    font-size: 11px; font-weight: 700; cursor: pointer;
+    letter-spacing: 1px; text-transform: uppercase;
+    width: 84px;
+  }
+  .char-img-overlay button.remove-btn {
+    background: transparent; border-color: #555;
+  }
+  .char-img-overlay button:hover { background: #a03030; }
+  .char-img-overlay button.remove-btn:hover { background: #333; }
+
+  .lifepath-top-row {
+    display: grid; grid-template-columns: auto 1fr;
+    gap: 12px; margin-bottom: 14px; align-items: start;
+  }
+
+  /* ── AUTOSAVE INDICATOR ── */
+  #autosave-badge {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 9px; color: #555; letter-spacing: 1px;
+    transition: color .3s;
+    margin-left: 8px;
+  }
+  #autosave-badge.active { color: #4a9a5a; }
+
+  /* ── UPDATE POPUP ── */
+  #update-popup {
+    position: fixed; bottom: 20px; left: 20px; z-index: 1000;
+    width: 320px;
+    background: var(--darker);
+    border: 1px solid var(--blood);
+    border-left: 3px solid var(--blood);
+    box-shadow: 0 4px 24px rgba(0,0,0,0.6);
+    transition: transform .35s ease, opacity .35s ease;
+    opacity: 1;
+  }
+  #update-popup.hidden {
+    transform: translateY(120%);
+    opacity: 0;
+    pointer-events: none;
+  }
+  .popup-header {
+    background: var(--blood-dk);
+    border-bottom: 1px solid var(--blood);
+    padding: 6px 10px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .popup-header .popup-title {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px; letter-spacing: 2px;
+    text-transform: uppercase; color: var(--text);
+  }
+  .popup-header .popup-version {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 9px; color: var(--blood);
+    letter-spacing: 1px; border: 1px solid var(--blood);
+    padding: 1px 5px;
+  }
+  .popup-body {
+    padding: 10px 12px;
+  }
+  .popup-body p {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px; color: var(--text-dim);
+    margin-bottom: 6px; letter-spacing: .3px;
+  }
+  .popup-body ul {
+    margin: 0 0 10px 0; padding-left: 14px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px; color: var(--text-dim);
+    line-height: 1.9; letter-spacing: .3px;
+  }
+  .popup-body ul li::marker { color: var(--blood); }
+  .popup-close-btn {
+    display: block; width: 100%;
+    background: var(--blood); color: var(--text);
+    border: none; border-radius: 2px;
+    padding: 6px 0; font-family: 'Rajdhani', sans-serif;
+    font-size: 12px; font-weight: 700; cursor: pointer;
+    letter-spacing: 2px; text-transform: uppercase;
+    transition: background .15s;
+  }
+  .popup-close-btn:hover { background: #a03030; }
 </style>
 </head>
 <body>
@@ -335,14 +455,15 @@
 <div id="topbar">
   <div class="logo">Cyber<span>punk</span> RED</div>
   <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:#666;letter-spacing:1px;">CHARACTER SHEET</div>
+  <span id="autosave-badge">AUTOSAVE OFF</span>
   <div class="spacer"></div>
-  <button class="secondary" onclick="loadJSON()">⬆ CARREGAR JSON</button>
-  <button onclick="saveJSON()">⬇ SALVAR JSON</button>
+  <button class="secondary" onclick="loadJSON()">⬆ LOAD JSON</button>
+  <button onclick="saveJSON()">⬇ SAVE JSON</button>
   <input type="file" id="fileInput" accept=".json" style="display:none" onchange="handleFile(event)">
 </div>
 
 <div id="tabs">
-  <div class="tab active" onclick="showTab(0)">01 · FICHA PRINCIPAL</div>
+  <div class="tab active" onclick="showTab(0)">01 · MAIN SHEET</div>
   <div class="tab" onclick="showTab(1)">02 · LIFEPATH</div>
   <div class="tab" onclick="showTab(2)">03 · CYBERWARE</div>
 </div>
@@ -356,11 +477,11 @@
   <div class="handle-row">
     <div>
       <label>HANDLE /</label>
-      <input type="text" id="handle" placeholder="Nome do personagem">
+      <input type="text" id="handle" placeholder="Character name">
     </div>
     <div>
       <label>ROLE /</label>
-      <input type="text" id="role" placeholder="Classe / Função">
+      <input type="text" id="role" placeholder="Class / Role">
     </div>
     <div class="ability-box">
       <label>ABILITY #</label>
@@ -389,7 +510,7 @@
     <div class="skill-col">
       <!-- AWARENESS -->
       <div class="skill-subsec">Awareness</div>
-      <div class="skill-col-header"><span>Habilidade</span><span>MOD</span><span>NVL</span><span>STAT</span><span>BASE</span></div>
+      <div class="skill-col-header"><span>Skill</span><span>MOD</span><span>LVL</span><span>STAT</span><span>BASE</span></div>
       <div class="skill-row"><div class="skill-name skill-subsec-name">Concentration</div><input type="text" id="sk_aw_concentration_mod"><input type="text" id="sk_aw_concentration_lvl"><input type="text" id="sk_aw_concentration_stat"><input type="text" id="sk_aw_concentration_base"></div>
       <div class="skill-row"><div class="skill-name">Conceal/Reveal Object</div><input type="text" id="sk_aw_conceal_mod"><input type="text" id="sk_aw_conceal_lvl"><input type="text" id="sk_aw_conceal_stat"><input type="text" id="sk_aw_conceal_base"></div>
       <div class="skill-row"><div class="skill-name">Lip Reading</div><input type="text" id="sk_aw_lip_mod"><input type="text" id="sk_aw_lip_lvl"><input type="text" id="sk_aw_lip_stat"><input type="text" id="sk_aw_lip_base"></div>
@@ -397,7 +518,7 @@
       <div class="skill-row"><div class="skill-name">Tracking</div><input type="text" id="sk_aw_tracking_mod"><input type="text" id="sk_aw_tracking_lvl"><input type="text" id="sk_aw_tracking_stat"><input type="text" id="sk_aw_tracking_base"></div>
       <!-- BODY -->
       <div class="skill-subsec">Body</div>
-      <div class="skill-col-header"><span>Habilidade</span><span>MOD</span><span>NVL</span><span>STAT</span><span>BASE</span></div>
+      <div class="skill-col-header"><span>Skill</span><span>MOD</span><span>LVL</span><span>STAT</span><span>BASE</span></div>
       <div class="skill-row"><div class="skill-name skill-subsec-name">Athletics</div><input type="text" id="sk_bo_athletics_mod"><input type="text" id="sk_bo_athletics_lvl"><input type="text" id="sk_bo_athletics_stat"><input type="text" id="sk_bo_athletics_base"></div>
       <div class="skill-row"><div class="skill-name">Contortionist</div><input type="text" id="sk_bo_contortionist_mod"><input type="text" id="sk_bo_contortionist_lvl"><input type="text" id="sk_bo_contortionist_stat"><input type="text" id="sk_bo_contortionist_base"></div>
       <div class="skill-row"><div class="skill-name">Dance</div><input type="text" id="sk_bo_dance_mod"><input type="text" id="sk_bo_dance_lvl"><input type="text" id="sk_bo_dance_stat"><input type="text" id="sk_bo_dance_base"></div>
@@ -406,14 +527,14 @@
       <div class="skill-row"><div class="skill-name skill-subsec-name">Stealth</div><input type="text" id="sk_bo_stealth_mod"><input type="text" id="sk_bo_stealth_lvl"><input type="text" id="sk_bo_stealth_stat"><input type="text" id="sk_bo_stealth_base"></div>
       <!-- CONTROL -->
       <div class="skill-subsec">Control</div>
-      <div class="skill-col-header"><span>Habilidade</span><span>MOD</span><span>NVL</span><span>STAT</span><span>BASE</span></div>
+      <div class="skill-col-header"><span>Skill</span><span>MOD</span><span>LVL</span><span>STAT</span><span>BASE</span></div>
       <div class="skill-row"><div class="skill-name">Drive Land Vehicle</div><input type="text" id="sk_ct_drive_mod"><input type="text" id="sk_ct_drive_lvl"><input type="text" id="sk_ct_drive_stat"><input type="text" id="sk_ct_drive_base"></div>
       <div class="skill-row"><div class="skill-name">Pilot Air Vehicle <span class="x2-badge">x2</span></div><input type="text" id="sk_ct_pilot_air_mod"><input type="text" id="sk_ct_pilot_air_lvl"><input type="text" id="sk_ct_pilot_air_stat"><input type="text" id="sk_ct_pilot_air_base"></div>
       <div class="skill-row"><div class="skill-name">Pilot Sea Vehicle</div><input type="text" id="sk_ct_pilot_sea_mod"><input type="text" id="sk_ct_pilot_sea_lvl"><input type="text" id="sk_ct_pilot_sea_stat"><input type="text" id="sk_ct_pilot_sea_base"></div>
       <div class="skill-row"><div class="skill-name">Riding</div><input type="text" id="sk_ct_riding_mod"><input type="text" id="sk_ct_riding_lvl"><input type="text" id="sk_ct_riding_stat"><input type="text" id="sk_ct_riding_base"></div>
       <!-- EDUCATION -->
       <div class="skill-subsec">Education</div>
-      <div class="skill-col-header"><span>Habilidade</span><span>MOD</span><span>NVL</span><span>STAT</span><span>BASE</span></div>
+      <div class="skill-col-header"><span>Skill</span><span>MOD</span><span>LVL</span><span>STAT</span><span>BASE</span></div>
       <div class="skill-row"><div class="skill-name">Accounting</div><input type="text" id="sk_ed_accounting_mod"><input type="text" id="sk_ed_accounting_lvl"><input type="text" id="sk_ed_accounting_stat"><input type="text" id="sk_ed_accounting_base"></div>
       <div class="skill-row"><div class="skill-name">Animal Handling</div><input type="text" id="sk_ed_animal_mod"><input type="text" id="sk_ed_animal_lvl"><input type="text" id="sk_ed_animal_stat"><input type="text" id="sk_ed_animal_base"></div>
       <div class="skill-row"><div class="skill-name">Bureaucracy</div><input type="text" id="sk_ed_bureaucracy_mod"><input type="text" id="sk_ed_bureaucracy_lvl"><input type="text" id="sk_ed_bureaucracy_stat"><input type="text" id="sk_ed_bureaucracy_base"></div>
@@ -434,7 +555,7 @@
     <div class="skill-col">
       <!-- EDUCATION (continued) -->
       <div class="skill-subsec">Education (cont.)</div>
-      <div class="skill-col-header"><span>Habilidade</span><span>MOD</span><span>NVL</span><span>STAT</span><span>BASE</span></div>
+      <div class="skill-col-header"><span>Skill</span><span>MOD</span><span>LVL</span><span>STAT</span><span>BASE</span></div>
       <div class="skill-row"><div class="skill-name">Library Search</div><input type="text" id="sk_eb_library_mod"><input type="text" id="sk_eb_library_lvl"><input type="text" id="sk_eb_library_stat"><input type="text" id="sk_eb_library_base"></div>
       <div class="skill-row"><div class="skill-name">Local Expert</div><input type="text" id="sk_eb_local_mod"><input type="text" id="sk_eb_local_lvl"><input type="text" id="sk_eb_local_stat"><input type="text" id="sk_eb_local_base"></div>
       <div class="skill-row"><div class="skill-name">↳ Your Home</div><input type="text" id="sk_eb_yourhome_mod"><input type="text" id="sk_eb_yourhome_lvl"><input type="text" id="sk_eb_yourhome_stat"><input type="text" id="sk_eb_yourhome_base"></div>
@@ -447,7 +568,7 @@
       <div class="skill-row"><div class="skill-name">Wilderness Survival</div><input type="text" id="sk_eb_wilderness_mod"><input type="text" id="sk_eb_wilderness_lvl"><input type="text" id="sk_eb_wilderness_stat"><input type="text" id="sk_eb_wilderness_base"></div>
       <!-- FIGHTING -->
       <div class="skill-subsec">Fighting</div>
-      <div class="skill-col-header"><span>Habilidade</span><span>MOD</span><span>NVL</span><span>STAT</span><span>BASE</span></div>
+      <div class="skill-col-header"><span>Skill</span><span>MOD</span><span>LVL</span><span>STAT</span><span>BASE</span></div>
       <div class="skill-row"><div class="skill-name skill-subsec-name">Brawling</div><input type="text" id="sk_fi_brawling_mod"><input type="text" id="sk_fi_brawling_lvl"><input type="text" id="sk_fi_brawling_stat"><input type="text" id="sk_fi_brawling_base"></div>
       <div class="skill-row"><div class="skill-name">Evasion</div><input type="text" id="sk_fi_evasion_mod"><input type="text" id="sk_fi_evasion_lvl"><input type="text" id="sk_fi_evasion_stat"><input type="text" id="sk_fi_evasion_base"></div>
       <div class="skill-row"><div class="skill-name">Martial Arts <span class="x2-badge">x2</span></div><input type="text" id="sk_fi_martial_mod"><input type="text" id="sk_fi_martial_lvl"><input type="text" id="sk_fi_martial_stat"><input type="text" id="sk_fi_martial_base"></div>
@@ -456,14 +577,14 @@
       <div class="skill-row"><div class="skill-name skill-subsec-name">Melee Weapon</div><input type="text" id="sk_fi_melee_mod"><input type="text" id="sk_fi_melee_lvl"><input type="text" id="sk_fi_melee_stat"><input type="text" id="sk_fi_melee_base"></div>
       <!-- PERFORMANCE -->
       <div class="skill-subsec">Performance</div>
-      <div class="skill-col-header"><span>Habilidade</span><span>MOD</span><span>NVL</span><span>STAT</span><span>BASE</span></div>
+      <div class="skill-col-header"><span>Skill</span><span>MOD</span><span>LVL</span><span>STAT</span><span>BASE</span></div>
       <div class="skill-row"><div class="skill-name">Acting</div><input type="text" id="sk_pe_acting_mod"><input type="text" id="sk_pe_acting_lvl"><input type="text" id="sk_pe_acting_stat"><input type="text" id="sk_pe_acting_base"></div>
       <div class="skill-row"><div class="skill-name">Play Instrument</div><input type="text" id="sk_pe_instrument_mod"><input type="text" id="sk_pe_instrument_lvl"><input type="text" id="sk_pe_instrument_stat"><input type="text" id="sk_pe_instrument_base"></div>
       <div class="skill-row"><div class="skill-name"><input type="text" id="sk_pe_custom1_name" placeholder="(custom)"></div><input type="text" id="sk_pe_custom1_mod"><input type="text" id="sk_pe_custom1_lvl"><input type="text" id="sk_pe_custom1_stat"><input type="text" id="sk_pe_custom1_base"></div>
       <div class="skill-row"><div class="skill-name"><input type="text" id="sk_pe_custom2_name" placeholder="(custom)"></div><input type="text" id="sk_pe_custom2_mod"><input type="text" id="sk_pe_custom2_lvl"><input type="text" id="sk_pe_custom2_stat"><input type="text" id="sk_pe_custom2_base"></div>
       <!-- RANGED WEAPONS -->
       <div class="skill-subsec">Ranged Weapons</div>
-      <div class="skill-col-header"><span>Habilidade</span><span>MOD</span><span>NVL</span><span>STAT</span><span>BASE</span></div>
+      <div class="skill-col-header"><span>Skill</span><span>MOD</span><span>LVL</span><span>STAT</span><span>BASE</span></div>
       <div class="skill-row"><div class="skill-name">Archery</div><input type="text" id="sk_rw_archery_mod"><input type="text" id="sk_rw_archery_lvl"><input type="text" id="sk_rw_archery_stat"><input type="text" id="sk_rw_archery_base"></div>
       <div class="skill-row"><div class="skill-name">Autofire <span class="x2-badge">x2</span></div><input type="text" id="sk_rw_autofire_mod"><input type="text" id="sk_rw_autofire_lvl"><input type="text" id="sk_rw_autofire_stat"><input type="text" id="sk_rw_autofire_base"></div>
       <div class="skill-row"><div class="skill-name">Handgun</div><input type="text" id="sk_rw_handgun_mod"><input type="text" id="sk_rw_handgun_lvl"><input type="text" id="sk_rw_handgun_stat"><input type="text" id="sk_rw_handgun_base"></div>
@@ -471,7 +592,7 @@
       <div class="skill-row"><div class="skill-name">Shoulder Arms</div><input type="text" id="sk_rw_shoulder_mod"><input type="text" id="sk_rw_shoulder_lvl"><input type="text" id="sk_rw_shoulder_stat"><input type="text" id="sk_rw_shoulder_base"></div>
       <!-- SOCIAL -->
       <div class="skill-subsec">Social</div>
-      <div class="skill-col-header"><span>Habilidade</span><span>MOD</span><span>NVL</span><span>STAT</span><span>BASE</span></div>
+      <div class="skill-col-header"><span>Skill</span><span>MOD</span><span>LVL</span><span>STAT</span><span>BASE</span></div>
       <div class="skill-row"><div class="skill-name">Bribery</div><input type="text" id="sk_so_bribery_mod"><input type="text" id="sk_so_bribery_lvl"><input type="text" id="sk_so_bribery_stat"><input type="text" id="sk_so_bribery_base"></div>
       <div class="skill-row"><div class="skill-name skill-subsec-name">Conversation</div><input type="text" id="sk_so_conversation_mod"><input type="text" id="sk_so_conversation_lvl"><input type="text" id="sk_so_conversation_stat"><input type="text" id="sk_so_conversation_base"></div>
       <div class="skill-row"><div class="skill-name">Human Perception</div><input type="text" id="sk_so_human_mod"><input type="text" id="sk_so_human_lvl"><input type="text" id="sk_so_human_stat"><input type="text" id="sk_so_human_base"></div>
@@ -481,7 +602,7 @@
     <div class="skill-col">
       <!-- SOCIAL continued -->
       <div class="skill-subsec">Social (cont.)</div>
-      <div class="skill-col-header"><span>Habilidade</span><span>MOD</span><span>NVL</span><span>STAT</span><span>BASE</span></div>
+      <div class="skill-col-header"><span>Skill</span><span>MOD</span><span>LVL</span><span>STAT</span><span>BASE</span></div>
       <div class="skill-row"><div class="skill-name">Interrogation</div><input type="text" id="sk_sc_interrogation_mod"><input type="text" id="sk_sc_interrogation_lvl"><input type="text" id="sk_sc_interrogation_stat"><input type="text" id="sk_sc_interrogation_base"></div>
       <div class="skill-row"><div class="skill-name skill-subsec-name">Persuasion</div><input type="text" id="sk_sc_persuasion_mod"><input type="text" id="sk_sc_persuasion_lvl"><input type="text" id="sk_sc_persuasion_stat"><input type="text" id="sk_sc_persuasion_base"></div>
       <div class="skill-row"><div class="skill-name">Personal Grooming</div><input type="text" id="sk_sc_grooming_mod"><input type="text" id="sk_sc_grooming_lvl"><input type="text" id="sk_sc_grooming_stat"><input type="text" id="sk_sc_grooming_base"></div>
@@ -490,7 +611,7 @@
       <div class="skill-row"><div class="skill-name">Wardrobe &amp; Style</div><input type="text" id="sk_sc_wardrobe_mod"><input type="text" id="sk_sc_wardrobe_lvl"><input type="text" id="sk_sc_wardrobe_stat"><input type="text" id="sk_sc_wardrobe_base"></div>
       <!-- TECHNIQUE -->
       <div class="skill-subsec">Technique</div>
-      <div class="skill-col-header"><span>Habilidade</span><span>MOD</span><span>NVL</span><span>STAT</span><span>BASE</span></div>
+      <div class="skill-col-header"><span>Skill</span><span>MOD</span><span>LVL</span><span>STAT</span><span>BASE</span></div>
       <div class="skill-row"><div class="skill-name">Air Vehicle Tech</div><input type="text" id="sk_te_air_mod"><input type="text" id="sk_te_air_lvl"><input type="text" id="sk_te_air_stat"><input type="text" id="sk_te_air_base"></div>
       <div class="skill-row"><div class="skill-name">Basic Tech</div><input type="text" id="sk_te_basic_mod"><input type="text" id="sk_te_basic_lvl"><input type="text" id="sk_te_basic_stat"><input type="text" id="sk_te_basic_base"></div>
       <div class="skill-row"><div class="skill-name">Cybertech</div><input type="text" id="sk_te_cybertech_mod"><input type="text" id="sk_te_cybertech_lvl"><input type="text" id="sk_te_cybertech_stat"><input type="text" id="sk_te_cybertech_base"></div>
@@ -508,7 +629,7 @@
       <div class="skill-row"><div class="skill-name">Weapontech</div><input type="text" id="sk_te_weapontech_mod"><input type="text" id="sk_te_weapontech_lvl"><input type="text" id="sk_te_weapontech_stat"><input type="text" id="sk_te_weapontech_base"></div>
       <!-- CUSTOM SKILLS -->
       <div class="skill-subsec">Custom Skills</div>
-      <div class="skill-col-header"><span>Habilidade</span><span>MOD</span><span>NVL</span><span>STAT</span><span>BASE</span></div>
+      <div class="skill-col-header"><span>Skill</span><span>MOD</span><span>LVL</span><span>STAT</span><span>BASE</span></div>
       <div class="skill-row"><div class="skill-name"><input type="text" id="sk_cs_1_name" placeholder="(custom)"></div><input type="text" id="sk_cs_1_mod"><input type="text" id="sk_cs_1_lvl"><input type="text" id="sk_cs_1_stat"><input type="text" id="sk_cs_1_base"></div>
       <div class="skill-row"><div class="skill-name"><input type="text" id="sk_cs_2_name" placeholder="(custom)"></div><input type="text" id="sk_cs_2_mod"><input type="text" id="sk_cs_2_lvl"><input type="text" id="sk_cs_2_stat"><input type="text" id="sk_cs_2_base"></div>
       <div class="skill-row"><div class="skill-name"><input type="text" id="sk_cs_3_name" placeholder="(custom)"></div><input type="text" id="sk_cs_3_mod"><input type="text" id="sk_cs_3_lvl"><input type="text" id="sk_cs_3_stat"><input type="text" id="sk_cs_3_base"></div>
@@ -526,8 +647,8 @@
     <div class="sec-header">Weapons</div>
     <table class="weapons-table">
       <thead><tr>
-        <th style="width:35%">Arma</th>
-        <th>DMG</th><th>Munição</th><th>ROF</th><th>Notas</th>
+        <th style="width:35%">Weapon</th>
+        <th>DMG</th><th>Ammo</th><th>ROF</th><th>Notes</th>
       </tr></thead>
       <tbody id="weapons-body"></tbody>
     </table>
@@ -536,9 +657,9 @@
   <!-- ARMOR + HP -->
   <div class="bottom-row">
     <div class="panel">
-      <div class="sec-header">Armor — Esquerda</div>
+      <div class="sec-header">Armor — Left</div>
       <table class="armor-table">
-        <thead><tr><th>Local</th><th>SP</th><th>Penalidade</th></tr></thead>
+        <thead><tr><th>Location</th><th>SP</th><th>Penalty</th></tr></thead>
         <tbody>
           <tr><td class="row-label">Head</td><td><input type="text" id="arm_head_l_sp"></td><td><input type="text" id="arm_head_l_pen"></td></tr>
           <tr><td class="row-label">Body</td><td><input type="text" id="arm_body_l_sp"></td><td><input type="text" id="arm_body_l_pen"></td></tr>
@@ -547,9 +668,9 @@
       </table>
     </div>
     <div class="panel">
-      <div class="sec-header">Armor — Direita</div>
+      <div class="sec-header">Armor — Right</div>
       <table class="armor-table">
-        <thead><tr><th>Local</th><th>SP</th><th>Penalidade</th></tr></thead>
+        <thead><tr><th>Location</th><th>SP</th><th>Penalty</th></tr></thead>
         <tbody>
           <tr><td class="row-label">Head</td><td><input type="text" id="arm_head_r_sp"></td><td><input type="text" id="arm_head_r_pen"></td></tr>
           <tr><td class="row-label">Body</td><td><input type="text" id="arm_body_r_sp"></td><td><input type="text" id="arm_body_r_pen"></td></tr>
@@ -589,9 +710,25 @@
      ═══════════════════════════════════════════════════════ -->
 <div class="sheet-page" id="page-1">
 
-  <div class="handle-row" style="margin-bottom:14px;">
-    <div><label>HANDLE /</label><input type="text" id="p2_handle"></div>
-    <div><label>ALIASES /</label><input type="text" id="p2_aliases"></div>
+  <div class="lifepath-top-row">
+    <!-- Character Image -->
+    <div class="char-image-container" onclick="triggerImageUpload()" title="Click to upload character portrait">
+      <img id="char-image-preview" alt="Character portrait">
+      <div class="char-img-placeholder">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+        CLICK TO<br>UPLOAD<br>PORTRAIT
+      </div>
+      <div class="char-img-overlay">
+        <button onclick="triggerImageUpload(); event.stopPropagation()">Change</button>
+        <button class="remove-btn" onclick="removeCharImage(); event.stopPropagation()">Remove</button>
+      </div>
+    </div>
+    <input type="file" id="char-image-input" accept="image/*" style="display:none" onchange="handleCharImage(event)">
+    <!-- Handle / Aliases -->
+    <div class="handle-row" style="margin-bottom:0;">
+      <div><label>HANDLE /</label><input type="text" id="p2_handle"></div>
+      <div><label>ALIASES /</label><input type="text" id="p2_aliases"></div>
+    </div>
   </div>
 
   <div class="sec-header" style="margin-bottom:8px;">Lifepath</div>
@@ -732,7 +869,7 @@
   <div class="cyberdeck-panel">
     <div class="sec-header" style="margin-bottom:8px;">Cyberdeck</div>
     <div class="deck-header">
-      <label>DECK</label><input type="text" id="deck_name" placeholder="modelo">
+      <label>DECK</label><input type="text" id="deck_name" placeholder="model">
       <label>PRG SLOTS</label><input type="text" id="deck_prg" class="deck-slot-input">
       <label>HDW SLOTS</label><input type="text" id="deck_hdw" class="deck-slot-input">
       <label>UNI SLOTS</label><input type="text" id="deck_uni" class="deck-slot-input">
@@ -740,13 +877,13 @@
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
       <div>
         <table class="prg-table">
-          <thead><tr><th style="width:55%">Programs / Hardware</th><th>ATK</th><th>DEF</th><th>REZ</th><th>Classe</th></tr></thead>
+          <thead><tr><th style="width:55%">Programs / Hardware</th><th>ATK</th><th>DEF</th><th>REZ</th><th>Class</th></tr></thead>
           <tbody id="deck-prg-body"></tbody>
         </table>
       </div>
       <div>
         <table class="prg-table">
-          <thead><tr><th style="width:55%">Programs / Hardware</th><th>ATK</th><th>DEF</th><th>REZ</th><th>Classe</th></tr></thead>
+          <thead><tr><th style="width:55%">Programs / Hardware</th><th>ATK</th><th>DEF</th><th>REZ</th><th>Class</th></tr></thead>
           <tbody id="deck-hdw-body"></tbody>
         </table>
       </div>
@@ -755,7 +892,26 @@
 
 </div><!-- /page-2 -->
 
-<div id="notif">✓ Salvo com sucesso</div>
+<!-- ─── UPDATE POPUP v1.0 ─────────────────────────────────── -->
+<div id="update-popup" class="hidden">
+  <div class="popup-header">
+    <span class="popup-title">Update Notes</span>
+    <span class="popup-version">v1.0</span>
+  </div>
+  <div class="popup-body">
+    <p>New features in this version:</p>
+    <ul>
+      <li>Autosave via local storage — fields persist across sessions</li>
+      <li>Character portrait upload in the Lifepath tab</li>
+      <li>Full English language interface</li>
+      <li>This update notes popup (shows once per version)</li>
+    </ul>
+    <button class="popup-close-btn" id="popup-close-btn">Got it</button>
+  </div>
+</div>
+
+<div id="notif">Saved successfully</div>
+
 
 <script>
 // ─── BUILD DYNAMIC ROWS ──────────────────────────────────
@@ -764,7 +920,7 @@ function makeWeaponRows() {
   for (let i = 1; i <= 6; i++) {
     const tr = document.createElement('tr');
     tr.innerHTML = `
-      <td><input type="text" id="wp_${i}_name" placeholder="Nome da arma"></td>
+      <td><input type="text" id="wp_${i}_name" placeholder="Weapon name"></td>
       <td><input type="text" id="wp_${i}_dmg"></td>
       <td><input type="text" id="wp_${i}_ammo"></td>
       <td><input type="text" id="wp_${i}_rof"></td>
@@ -838,13 +994,16 @@ function saveJSON() {
     const el = document.getElementById(id);
     if (el) data[id] = el.value;
   });
+  const portrait = localStorage.getItem(IMG_CACHE_KEY);
+  if (portrait) data['__portrait__'] = portrait;
+
   const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
   const a = document.createElement('a');
-  const handle = data['handle'] || data['p2_handle'] || 'personagem';
+  const handle = data['handle'] || data['p2_handle'] || 'character';
   a.href = URL.createObjectURL(blob);
   a.download = `cyberpunk_${handle.replace(/\s+/g,'_')}.json`;
   a.click();
-  notify('✓ JSON salvo!');
+  notify('Saved as JSON!');
 }
 
 // ─── LOAD ─────────────────────────────────────────────────
@@ -861,12 +1020,19 @@ function handleFile(event) {
       const data = JSON.parse(e.target.result);
       let loaded = 0;
       Object.entries(data).forEach(([id, val]) => {
+        if (id === '__portrait__') {
+          setCharImagePreview(val);
+          localStorage.setItem(IMG_CACHE_KEY, val);
+          return;
+        }
         const el = document.getElementById(id);
         if (el) { el.value = val; loaded++; }
       });
-      notify(`✓ Carregado — ${loaded} campos`);
+      if (!data['__portrait__']) removeCharImage();
+      saveToCache();
+      notify(`Loaded — ${loaded} fields`);
     } catch(err) {
-      notify('✗ Erro ao carregar JSON');
+      notify('Error loading JSON');
     }
   };
   reader.readAsText(file);
@@ -882,6 +1048,131 @@ function notify(msg) {
   clearTimeout(notifTimer);
   notifTimer = setTimeout(() => n.classList.remove('show'), 2500);
 }
+
+// ─── AUTOSAVE CACHE ────────────────────────────────────────
+const CACHE_KEY      = 'cyberpunk_sheet_data';
+const IMG_CACHE_KEY  = 'cyberpunk_sheet_portrait';
+const VER_KEY        = 'cyberpunk_sheet_last_version';
+const CURRENT_VER    = '1.0';
+
+let autosaveDebounce;
+
+function saveToCache() {
+  const data = {};
+  getAllIds().forEach(id => {
+    const el = document.getElementById(id);
+    if (el) data[id] = el.value;
+  });
+  localStorage.setItem(CACHE_KEY, JSON.stringify(data));
+
+  // Flash autosave badge
+  const badge = document.getElementById('autosave-badge');
+  if (badge) {
+    badge.textContent = 'AUTOSAVED';
+    badge.classList.add('active');
+    clearTimeout(autosaveDebounce);
+    autosaveDebounce = setTimeout(() => {
+      badge.textContent = 'AUTOSAVE ON';
+      badge.classList.remove('active');
+    }, 1500);
+  }
+}
+
+function loadFromCache() {
+  const raw = localStorage.getItem(CACHE_KEY);
+  if (!raw) return;
+  try {
+    const data = JSON.parse(raw);
+    let loaded = 0;
+    Object.entries(data).forEach(([id, val]) => {
+      const el = document.getElementById(id);
+      if (el) { el.value = val; loaded++; }
+    });
+
+    // Restore portrait
+    const portrait = localStorage.getItem(IMG_CACHE_KEY);
+    if (portrait) setCharImagePreview(portrait);
+  } catch(e) { /* silently ignore corrupt cache */ }
+
+  // Enable badge
+  const badge = document.getElementById('autosave-badge');
+  if (badge) badge.textContent = 'AUTOSAVE ON';
+}
+
+function attachAutosaveListeners() {
+  let debounceTimer;
+  document.querySelectorAll('input[type=text], textarea').forEach(el => {
+    el.addEventListener('input', () => {
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(saveToCache, 500);
+    });
+  });
+  const badge = document.getElementById('autosave-badge');
+  if (badge) badge.textContent = 'AUTOSAVE ON';
+}
+
+// ─── CHARACTER IMAGE ───────────────────────────────────────
+function triggerImageUpload() {
+  document.getElementById('char-image-input').click();
+}
+
+function handleCharImage(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const dataUrl = e.target.result;
+    setCharImagePreview(dataUrl);
+    localStorage.setItem(IMG_CACHE_KEY, dataUrl);
+    saveToCache();
+  };
+  reader.readAsDataURL(file);
+  event.target.value = '';
+}
+
+function setCharImagePreview(dataUrl) {
+  const img = document.getElementById('char-image-preview');
+  const placeholder = document.querySelector('.char-img-placeholder');
+  if (!img) return;
+  img.src = dataUrl;
+  img.style.display = 'block';
+  if (placeholder) placeholder.style.display = 'none';
+}
+
+function removeCharImage() {
+  const img = document.getElementById('char-image-preview');
+  const placeholder = document.querySelector('.char-img-placeholder');
+  if (img) { img.src = ''; img.style.display = 'none'; }
+  if (placeholder) placeholder.style.display = '';
+  localStorage.removeItem(IMG_CACHE_KEY);
+  saveToCache();
+}
+
+
+
+// ─── UPDATE POPUP ──────────────────────────────────────────
+function initUpdatePopup() {
+  const lastSeen = localStorage.getItem(VER_KEY);
+  const popup = document.getElementById('update-popup');
+  if (!popup) return;
+
+  if (lastSeen !== CURRENT_VER) {
+    // Show after brief delay for polish
+    setTimeout(() => popup.classList.remove('hidden'), 600);
+  }
+
+  document.getElementById('popup-close-btn').addEventListener('click', () => {
+    popup.classList.add('hidden');
+    localStorage.setItem(VER_KEY, CURRENT_VER);
+  });
+}
+
+// ─── INIT ──────────────────────────────────────────────────
+loadFromCache();
+attachAutosaveListeners();
+initUpdatePopup();
+
 </script>
+
 </body>
 </html>
